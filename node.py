@@ -34,10 +34,12 @@ def AStar(_board: BoardStateManager):
 
 		visited.add(curr_node.state_representation())
 
+                # Actions dicts have vehicle idx, forward/backward direction of movement,
+                # and new head Position
 		valid_actions = _board.compute_valid_actions(vehicles)
 
-		# For each valid action, one vehicle has a new position. 
+		# For each action, construct a new Node object and deep copy the vehicles
+		# list when passing the param. Then, change the vehicle at vehicle_idx to
+		# have the new head Position
 		successor_nodes = generate_successor_nodes(curr_node, valid_actions)
 
-		# When we generate successor states by calling an action, we return a new
-		# list of vehicles, which we then construct a Node object out of
