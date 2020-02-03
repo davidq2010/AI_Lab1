@@ -53,4 +53,112 @@ def AStar(_board: BoardStateManager):
 		# list when passing the param. Then, change the vehicle at vehicle_idx to
 		# have the new head Position
 		successor_nodes = curr_node.generate_successor_nodes(valid_actions)
+		for successor in successor_nodes:
+			if successor.state_representation() in visited:
+				continue
+
+			successor.g = curr_node.g + 1
+			successor.h = compute_heuristic(successor.vehicles, _board)
+			successor.f = successor.g + successor.h
+
+			inFrontier = False
+			for unvisited in frontier: #is this valid if frontier is a PQ
+				#update the f value if nodes are same and new f value is smaller
+				if successor.state_representation() == unvisited.state_representation():
+					inFrontier = True
+					if successor.f < unvisited.f:
+						unvisited.f = successor.f
+					 
+			if not inFrontier: frontier.append(successor)
+
+#finds the node in the frontier with the lowest f value
+def compute_best_node(_frontier):
+	current = frontier[0]
+	curr_index = 0
+	for i, node in enumerate(frontier):
+		if node.f < current.f:
+			current = node
+			curr_index = i
+
+	return frontier.pop(curr_index)
+
+
+#computes path from start to goal 
+def compute_path(_curr_node):
+	path = []
+	while current is not None:
+		path.append(current.prev_action)
+		current = current.parent
+	return path[::-1]
+
+def compute_heuristic(_vehicles, board):
+	#initialize grid -- BETTER WAY OF DOING THIS????
+	grid = [[False for i in range(board.cols)] for j in range(board.rows)]
+        
+    for vehicle in _vehicles:
+        vehicle_pos_ptr = Position_2D(vehicle.head.y, vehicle.head.x)
+        for i in range(vehicle.len):
+            grid[vehicle_pos_ptr.y][vehicle_pos_ptr.x] = True
+            if vehicle.horizontal:
+                vehicle_pos_ptr += (orientation_positions[Orientation.HORIZONTAL]
+                                                            * Direction.BACKWARD)
+            else:
+                vehicle_pos_ptr += (orientation_positions[Orientation.VERTICAL]
+                                                            * Direction.BACKWARD)
+
+    #initialize heuristic variables            
+	dist = 0
+	num_blocked_squares = 0
+	_goal = board.goal
+	red_car = _vehicles[0]
+
+	#get position of red car
+	red_car_ptr = Position_2D(red_car.head.y, red_car.head.x)
+	#if red car is horizontal...
+	if red_car.horizontal:
+		#distance from head to goal
+		dist_head = abs(_goal.x - red_car_ptr.x)
+		#tail position
+		tail_ptr = red_car_ptr.x + red_car.len-1
+		#distance from tail to goal
+		dist_tail = abs(_goal.x - tail_ptr)
+		#if tail is closer, set heuristic distance and compute # of blocked squares	
+		if(dist_head > dist_tail ):
+			dist = dist_tail
+			start_coord = tail_ptr + 1
+			while start_coord < _goal.x:
+				if grid[red_car_ptr.y][start_coord]:
+					num_blocked_squares += 1
+				start_coord += 1
+		else:
+			start_coord = red_car_ptr.x - 1 
+			while start_coord > _goal.x:
+				if grid[red_car_ptr.y][start_coord]:
+					num_blocked_squares += 1
+				start_coord -= 1
+	#if red car is vertical			
+	else:
+		#distance from head to goal
+		dist_head = abs(_goal.y - red_car_ptr.y)
+		#tail position
+		tail_ptr = red_car_ptr.y - red_car.len+1
+		#distance from tail to goal
+		dist_tail = abs(_goal.y - tail_ptr)
+		#if tail is closer, set heuristic distance and compute # of blocked squares	
+		if(dist_head > dist_tail ):
+			dist = dist_tail
+			start_coord = tail_ptr - 1
+			while start_coord > _goal.y:
+				if grid[start_coord][red_car_ptr.x]:
+					num_blocked_squares += 1
+				start_coord -= 1
+		else:
+			dist = dist_head
+			start_coord = red_car_ptr.y + 1 
+			while start_coord < _goal:
+				if grid[start_coord][red_car_ptr.x]:
+					num_blocked_squares += 1
+				start_coord += 1
+
+		return dist + num_blocked_squares
 
