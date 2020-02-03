@@ -3,6 +3,9 @@ class Position_2D:
 		self.x = _x
 		self.y = _y
 
+	def get_tuple(self):
+		return (y, x)
+
 	def __iadd__(self, _other):
 		self.x += _other.x
 		self.y += _other.y
