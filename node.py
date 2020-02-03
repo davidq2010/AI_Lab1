@@ -1,10 +1,11 @@
 from vehicle import Vehicle
 from board_state import BoardStateManager
 
+from copy import deepcopy
 from Typing import Tuple
 
 class Node:
-	def __init__(self, _vehicles: Tuple[Vehicle], _prev_action: Action, _parent):
+	def __init__(self, _vehicles: Tuple[Vehicle], _prev_action, _parent):
 		self.vehicles = _vehicles
 		self.prev_action = _prev_action
 		self.parent = _parent
@@ -15,6 +16,15 @@ class Node:
 
 	def state_representation(self):
 		return (vehicle.state_representation for vehicle in self.vehicles)
+
+	def generate_successors(self, _actions):
+                successors = []
+                for action in _actions:
+                        vehicle_idx = action["vehicle_idx"]
+                        new_head = action["new_head"]
+                        successor = Node(deepcopy(self.vehicles), action, self)
+                        successor.vehicles[vehicle_idx].head = new_head
+                        successors.append(successor)
 
 
 def AStar(_board: BoardStateManager):
@@ -41,5 +51,5 @@ def AStar(_board: BoardStateManager):
 		# For each action, construct a new Node object and deep copy the vehicles
 		# list when passing the param. Then, change the vehicle at vehicle_idx to
 		# have the new head Position
-		successor_nodes = generate_successor_nodes(curr_node, valid_actions)
+		successor_nodes = curr_node.generate_successor_nodes(valid_actions)
 

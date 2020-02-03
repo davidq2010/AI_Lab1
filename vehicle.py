@@ -1,5 +1,5 @@
 from position import Position_2D
-from directions import Direction, Orientation, cardinal_vectors
+from directions import Direction
 
 class Vehicle:
 	# Orientation: up, down, left, right (each is a unit vector n s e w)
@@ -13,7 +13,3 @@ class Vehicle:
 			return head.x
 		else:
 			return head.y
-
-	def move(self, _dir: Direction):
-		"""This method is how AI performs an action."""
-		self.head += cardinal_vectors[self.orient] * _dir
