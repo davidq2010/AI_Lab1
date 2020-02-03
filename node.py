@@ -25,6 +25,7 @@ class Node:
                         successor = Node(deepcopy(self.vehicles), action, self)
                         successor.vehicles[vehicle_idx].head = new_head
                         successors.append(successor)
+                return successors
 
 
 def AStar(_board: BoardStateManager):
