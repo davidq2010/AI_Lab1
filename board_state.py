@@ -9,6 +9,15 @@ class BoardStateManager:
     def __init__(self):
         # Will later need config file input and class to parse config file.
         # Parser should verify that goal cell in front of red car
+        self.vehicle_list_1 = [Vehicle(Position_2D(5, 0), 2, False), 
+                               Vehicle(Position_2D(1, 0), 2, False), 
+                               Vehicle(Position_2D(5, 5), 2, False), 
+                               Vehicle(Position_2D(1, 5), 2, False)]
+
+        self.vehicle_list_2 = [Vehicle(Position_2D(5, 0), 2, True), 
+                               Vehicle(Position_2D(0, 0), 2, True), 
+                               Vehicle(Position_2D(5, 4), 2, True), 
+                               Vehicle(Position_2D(0, 4), 2, True)]       
         self.initialize()
 
     # Configuration file:
@@ -21,9 +30,8 @@ class BoardStateManager:
         self.rows = 6
         self.cols = 6
         self.goal = Position_2D(self.rows-1, self.cols-1)
-        self.grid = [[False for i in range(self.cols)] for i in range(self.rows)] #ADDED THIS for print
         # Init Vehicles
-        self.initial_vehicles = [Vehicle(Position_2D(3, 5), 2, False), Vehicle(Position_2D(3, 0), 2, False), Vehicle(Position_2D(2, 2), 2, True), Vehicle(Position_2D(1, 0), 2, True) ]
+        self.initial_vehicles = self.vehicle_list_2
         
     def print_grid(self,grid):
         for row in reversed(grid):
@@ -37,7 +45,6 @@ class BoardStateManager:
         # {"vehicle_idx": idx in vehicles list
         #  "new_head": Position2D, 
         #  "action": "forward/backward"}
-        self.print_grid(self.grid)
         # Initialize the grid's occupancy
         print(_vehicles[0].len)
         grid = [[False for i in range(self.cols)] for j in range(self.rows)]
@@ -51,7 +58,10 @@ class BoardStateManager:
                                                             * Direction.BACKWARD)
                 else:
                     vehicle_pos_ptr += (orientation_positions[Orientation.VERTICAL]
-                                                            * Direction.BACKWARD)
+                                                      * Direction.BACKWARD)
+
+        self.print_grid(grid)
+
         possible_actions = []
         # Compute valid actions given current vehicles
         for idx, vehicle in enumerate(_vehicles):

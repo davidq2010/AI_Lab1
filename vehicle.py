@@ -13,3 +13,7 @@ class Vehicle:
 			return head.x
 		else:
 			return head.y
+
+	def __repr__(self):
+		return "Head: {}, Orientation: {}".format(self.head,
+			"horizontal" and self.horizontal or "vertical")
