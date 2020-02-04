@@ -26,3 +26,11 @@ class Position_2D:
 			return Position_2D(self.y * _other, self.x * _other)
 		else:
 			raise TypeError("Operator not defined for Type {}".format(type(_other)))
+
+	def __eq__(self, _other):
+		if self.x == _other.x and self.y == _other.y:
+			return True
+		else: return False
+
+	def __repr__(self):
+		return "({}, {})".format(self.y, self.x)

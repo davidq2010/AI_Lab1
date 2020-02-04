@@ -3,7 +3,6 @@ from board_state import BoardStateManager
 from position import Position_2D
 from directions import Direction, Orientation, orientation_positions
 
-from pqdict import minpq
 from copy import deepcopy
 
 class Node:
@@ -19,17 +18,8 @@ class Node:
         self.g = 0
         self.f = 0
 
-    def __hash__(self):
-        return hash(self.state_representation())
-
-    def __eq__(self, _other):
-        return self.state_representation() == _other.state_representation()
-
-    def __lt__(self, _other):
-        return self.__hash__() < _other.__hash__()
-
     def state_representation(self):
-        return tuple(vehicle.state_representation() for vehicle in self.vehicles)
+        return (vehicle.state_representation for vehicle in self.vehicles)
 
     def generate_successors(self, _actions):
         successors = []
@@ -39,68 +29,13 @@ class Node:
                 successor = Node(deepcopy(self.vehicles), action, self)
                 successor.vehicles[vehicle_idx].head = new_head
                 successors.append(successor)
-        #for successor in successors:
-        #    print(successor)
+        for successor in successors:
+            print(successor)
         return successors
 
     def __repr__(self):
-        #return "Parent: {},\nPrevAction: {},\nVehicles: {}".format(self.parent.id if self.parent else None,
-        #    self.prev_action, self.vehicles)
-        return str(self.state_representation())
-
-
-def AStarWithPQ(_board: BoardStateManager):
-    start = Node(_board.initial_vehicles, None, None)
-
-    visited = set()
-
-    pq = minpq()
-
-    # Initialize pqdict with start node
-    # Assign it score of 0 (which is what start.f is initialized to)
-    pq.additem(start, (0, start))
-
-    while pq:
-        curr_node = pq.popitem()
-        score = pq[curr_node]
-   
-        vehicles = curr_node.vehicles
-
-        if goal_state_reached(vehicles[0], _board):
-            return compute_path(curr_node)
-
-        # So we never visit this node again
-        visited.add(curr_node)
-
-        valid_actions = _board.compute_valid_actions(vehicles)
-
-        successor_nodes = curr_node.generate_successors(valid_actions)
-
-        for successor in successor_nodes:
-            # No need to re-process visited nodes
-            if successor in visited:
-                continue
-
-            new_g = curr_node.g + 1
-            h = 0
-            #h = compute_heuristic(successor.vehicles, _board)
-            new_score = new_g + h
-
-            # Update scores as needed
-            # successor is a temporary Node state, not the same as
-            # the one in the pq
-            if successor in pq:
-                if new_score < pq[successor][0]:
-                    pq[successor][1].f = new_score
-                    pq[successor][1].g = new_g
-                    pq.updateitem(successor, (new_score, pq[successor][1]))
-
-                pq.updateitem(successor, ())
-                successor.g = new_g
-                successor.f = new_score
-                pq[successor] = new_score
-                pq.heapify(successor)
-
+        return "Parent: {},\nPrevAction: {},\nVehicles: {}".format(self.parent.id,
+            self.prev_action, self.vehicles)
 
 
 def AStar(_board: BoardStateManager):
@@ -108,10 +43,6 @@ def AStar(_board: BoardStateManager):
 
     frontier = [start]
     visited = set()
-
-    num_visited_nodes = 0
-
-    last_size = 0
 
     while frontier:
         idx = compute_best_node(frontier)
@@ -122,12 +53,7 @@ def AStar(_board: BoardStateManager):
         if goal_state_reached(vehicles[0], _board):
             return compute_path(curr_node)
 
-        visited.add(curr_node)
-        if len(visited) > last_size:
-            print("visited Node", curr_node.id)
-            print("VISITED: ", [visited])
-            num_visited_nodes += 1
-            last_size = len(visited)
+        visited.add(curr_node.state_representation())
 
                 # Actions dicts have vehicle idx, forward/backward direction of movement,
                 # and new head Position
@@ -139,8 +65,7 @@ def AStar(_board: BoardStateManager):
         successor_nodes = curr_node.generate_successors(valid_actions)
         # For each successor, update score if lower and add to frontier (if not in there)
         for successor in successor_nodes:
-            if successor in visited:
-                print("already visited")
+            if successor.state_representation() in visited:
                 continue
 
             # If successor is in frontier, compare its current score to potential score
@@ -149,19 +74,20 @@ def AStar(_board: BoardStateManager):
             h = 0
             successor.g = curr_node.g + 1
             h = compute_heuristic(successor.vehicles, _board)
+            print("HEURISTIC ==========")
+            print(h)
             successor.f = successor.g + h
 
-            #inFrontier = False
+            inFrontier = False
             for state in frontier: #is this valid if frontier is a PQ
                 #update the f value if nodes are same and new f value is smaller
-                if successor == state:
+                if successor.state_representation() == state.state_representation():
                     if successor.f < state.f:
                         state.f = successor.f
                         state.g = successor.g
                     break
             else:
                 frontier.append(successor)
-    return None
 
 
 #finds the node in the frontier with the lowest f value

@@ -10,6 +10,10 @@ class Vehicle:
 
 	def state_representation(self):
 		if self.horizontal:
-			return head.x
+			return self.head.x
 		else:
-			return head.y
+			return self.head.y
+
+	def __repr__(self):
+		return "Head: {}, Orientation: {}".format(self.head,
+			"horizontal" and self.horizontal or "vertical")
