@@ -69,22 +69,21 @@ def AStar(_board: BoardStateManager):
             # If successor is in frontier, compare its current score to potential score
             # from this path
             # Successor's potential updated values
-            g = curr_node.g + 1
+            successor.g = curr_node.g + 1
             h = compute_heuristic(successor.vehicles, _board)
-            f = g + h
-
-            if f < successor.f:
-                successor.f = f
-                successor.g = g
+            successor.f = successor.g + h
 
             inFrontier = False
             for state in frontier: #is this valid if frontier is a PQ
                 #update the f value if nodes are same and new f value is smaller
                 if successor.state_representation() == state.state_representation():
-                    inFrontier = True                
-                     
-            if not inFrontier: frontier.append(successor)
-            
+                    if successor.f < state.f:
+                        state.f = successor.f
+                        state.g = successor.g
+                break
+            else:
+                frontier.append(successor)
+
 
 #finds the node in the frontier with the lowest f value
 def compute_best_node(_frontier):
@@ -104,9 +103,9 @@ def goal_state_reached(red_car, _board):
     else:
         if red_car.head.y is _board.goal.y or red_car.head.y - red_car.len + 1 is _board.goal.y:
             return True
-    return False 
+    return False
 
-#computes path from start to goal 
+#computes path from start to goal
 def compute_path(_curr_node):
     path = []
     while current is not None:
@@ -117,7 +116,7 @@ def compute_path(_curr_node):
 def compute_heuristic(_vehicles, board):
     #initialize grid -- BETTER WAY OF DOING THIS????
     grid = [[False for i in range(board.cols)] for j in range(board.rows)]
-        
+
     for vehicle in _vehicles:
         vehicle_pos_ptr = Position_2D(vehicle.head.y, vehicle.head.x)
         for i in range(vehicle.len):
@@ -129,7 +128,7 @@ def compute_heuristic(_vehicles, board):
                 vehicle_pos_ptr += (orientation_positions[Orientation.VERTICAL]
                                                             * Direction.BACKWARD)
 
-    #initialize heuristic variables            
+    #initialize heuristic variables
     dist = 0
     num_blocked_squares = 0
     _goal = board.goal
@@ -145,7 +144,7 @@ def compute_heuristic(_vehicles, board):
         tail_ptr = red_car_ptr.x + red_car.len-1
         #distance from tail to goal
         dist_tail = abs(_goal.x - tail_ptr)
-        #if tail is closer, set heuristic distance and compute # of blocked squares 
+        #if tail is closer, set heuristic distance and compute # of blocked squares
         if(dist_head > dist_tail ):
             dist = dist_tail
             start_coord = tail_ptr + 1
@@ -154,12 +153,12 @@ def compute_heuristic(_vehicles, board):
                     num_blocked_squares += 1
                 start_coord += 1
         else:
-            start_coord = red_car_ptr.x - 1 
+            start_coord = red_car_ptr.x - 1
             while start_coord > _goal.x:
                 if grid[red_car_ptr.y][start_coord]:
                     num_blocked_squares += 1
                 start_coord -= 1
-    #if red car is vertical         
+    #if red car is vertical
     else:
         #distance from head to goal
         dist_head = abs(_goal.y - red_car_ptr.y)
@@ -167,7 +166,7 @@ def compute_heuristic(_vehicles, board):
         tail_ptr = red_car_ptr.y - red_car.len+1
         #distance from tail to goal
         dist_tail = abs(_goal.y - tail_ptr)
-        #if tail is closer, set heuristic distance and compute # of blocked squares 
+        #if tail is closer, set heuristic distance and compute # of blocked squares
         if(dist_head > dist_tail ):
             dist = dist_tail
             start_coord = tail_ptr - 1
@@ -177,7 +176,7 @@ def compute_heuristic(_vehicles, board):
                 start_coord -= 1
         else:
             dist = dist_head
-            start_coord = red_car_ptr.y + 1 
+            start_coord = red_car_ptr.y + 1
             while start_coord < _goal:
                 if grid[start_coord][red_car_ptr.x]:
                     num_blocked_squares += 1
