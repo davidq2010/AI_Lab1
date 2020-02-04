@@ -14,7 +14,6 @@ class Node:
         Node.class_id += 1
 
         self.g = 0
-        self.h = 0
         self.f = 0
 
     def state_representation(self):
@@ -38,7 +37,7 @@ class Node:
 
 
 def AStar(_board: BoardStateManager):
-    start = Node(_board.initial_vehicles, None)
+    start = Node(_board.initial_vehicles, None, None)
 
     frontier = [start]
     visited = set()
@@ -62,23 +61,30 @@ def AStar(_board: BoardStateManager):
         # list when passing the param. Then, change the vehicle at vehicle_idx to
         # have the new head Position
         successor_nodes = curr_node.generate_successor_nodes(valid_actions)
+        # For each successor, update score if lower and add to frontier (if not in there)
         for successor in successor_nodes:
             if successor.state_representation() in visited:
                 continue
 
-            successor.g = curr_node.g + 1
-            successor.h = compute_heuristic(successor.vehicles, _board)
-            successor.f = successor.g + successor.h
+            # If successor is in frontier, compare its current score to potential score
+            # from this path
+            # Successor's potential updated values
+            g = curr_node.g + 1
+            h = compute_heuristic(successor.vehicles, _board)
+            f = g + h
+
+            if f < successor.f:
+                successor.f = f
+                successor.g = g
 
             inFrontier = False
-            for unvisited in frontier: #is this valid if frontier is a PQ
+            for state in frontier: #is this valid if frontier is a PQ
                 #update the f value if nodes are same and new f value is smaller
-                if successor.state_representation() == unvisited.state_representation():
-                    inFrontier = True
-                    if successor.f < unvisited.f:
-                        unvisited.f = successor.f
+                if successor.state_representation() == state.state_representation():
+                    inFrontier = True                
                      
             if not inFrontier: frontier.append(successor)
+            
 
 #finds the node in the frontier with the lowest f value
 def compute_best_node(_frontier):
@@ -91,6 +97,14 @@ def compute_best_node(_frontier):
 
     return frontier.pop(curr_index)
 
+def goal_state_reached(red_car, _board):
+    if red_car.horizontal:
+        if red_car.head.x is _board.goal.x or red_car.head.x + red_car.len - 1 is _board.goal.x:
+            return True
+    else:
+        if red_car.head.y is _board.goal.y or red_car.head.y - red_car.len + 1 is _board.goal.y:
+            return True
+    return False 
 
 #computes path from start to goal 
 def compute_path(_curr_node):
