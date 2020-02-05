@@ -14,7 +14,8 @@ if __name__ == "__main__":
     #node = Node(board.vehicle_list_2, None, None)
     #print("\nSuccessors:")
     #node.generate_successors(test_actions)
-    optimal_path = node.AStar(board)
+    #optimal_path = node.AStar(board)
+    optimal_path = node.AStarWithPQ(board)
     for x in optimal_path:
         print(x)
 

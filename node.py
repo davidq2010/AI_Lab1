@@ -34,11 +34,11 @@ class Node:
     def generate_successors(self, _actions):
         successors = []
         for action in _actions:
-                vehicle_idx = action["vehicle_idx"]
-                new_head = action["new_head"]
-                successor = Node(deepcopy(self.vehicles), action, self)
-                successor.vehicles[vehicle_idx].head = new_head
-                successors.append(successor)
+            vehicle_idx = action["vehicle_idx"]
+            new_head = action["new_head"]
+            successor = Node(deepcopy(self.vehicles), action, self)
+            successor.vehicles[vehicle_idx].head = new_head
+            successors.append(successor)
         #for successor in successors:
         #    print(successor)
         return successors
@@ -61,9 +61,9 @@ def AStarWithPQ(_board: BoardStateManager):
     pq.additem(start, (0, start))
 
     while pq:
-        curr_node = pq.popitem()
-        score = pq[curr_node]
-   
+        curr_node, score_tup = pq.popitem()
+        score = score_tup[0]
+
         vehicles = curr_node.vehicles
 
         if goal_state_reached(vehicles[0], _board):
@@ -81,25 +81,22 @@ def AStarWithPQ(_board: BoardStateManager):
             if successor in visited:
                 continue
 
-            new_g = curr_node.g + 1
+            successor.g = curr_node.g + 1
             h = 0
             #h = compute_heuristic(successor.vehicles, _board)
-            new_score = new_g + h
+            successor.f = successor.g + h
 
             # Update scores as needed
             # successor is a temporary Node state, not the same as
             # the one in the pq
             if successor in pq:
-                if new_score < pq[successor][0]:
-                    pq[successor][1].f = new_score
-                    pq[successor][1].g = new_g
-                    pq.updateitem(successor, (new_score, pq[successor][1]))
-
-                pq.updateitem(successor, ())
-                successor.g = new_g
-                successor.f = new_score
-                pq[successor] = new_score
-                pq.heapify(successor)
+                if successor.f < pq[successor][0]:
+                    pq[successor][1].f = successor.f
+                    pq[successor][1].g = successor.g
+                    pq.updateitem(successor, (successor.f, pq[successor][1]))
+            else:
+                pq.additem(successor, (successor.f, successor))
+    return None
 
 
 
@@ -108,10 +105,6 @@ def AStar(_board: BoardStateManager):
 
     frontier = [start]
     visited = set()
-
-    num_visited_nodes = 0
-
-    last_size = 0
 
     while frontier:
         idx = compute_best_node(frontier)
@@ -123,14 +116,9 @@ def AStar(_board: BoardStateManager):
             return compute_path(curr_node)
 
         visited.add(curr_node)
-        if len(visited) > last_size:
-            print("visited Node", curr_node.id)
-            print("VISITED: ", [visited])
-            num_visited_nodes += 1
-            last_size = len(visited)
 
-                # Actions dicts have vehicle idx, forward/backward direction of movement,
-                # and new head Position
+        # Actions dicts have vehicle idx, forward/backward direction of movement,
+        # and new head Position
         valid_actions = _board.compute_valid_actions(vehicles)
 
         # For each action, construct a new Node object and deep copy the vehicles
@@ -140,10 +128,9 @@ def AStar(_board: BoardStateManager):
         # For each successor, update score if lower and add to frontier (if not in there)
         for successor in successor_nodes:
             if successor in visited:
-                print("already visited")
                 continue
 
-            # If successor is in frontier, compare its current score to potential score
+        # If successor is in frontier, compare its current score to potential score
             # from this path
             # Successor's potential updated values
             h = 0
@@ -203,12 +190,12 @@ def compute_heuristic(_vehicles, board):
             grid[vehicle_pos_ptr.y][vehicle_pos_ptr.x] = True
             if vehicle.horizontal:
                 vehicle_pos_ptr += (orientation_positions[Orientation.HORIZONTAL]
-                                                            * Direction.BACKWARD)
+                        * Direction.BACKWARD)
             else:
                 vehicle_pos_ptr += (orientation_positions[Orientation.VERTICAL]
-                                                            * Direction.BACKWARD)
+                        * Direction.BACKWARD)
 
-    #initialize heuristic variables
+                #initialize heuristic variables
     dist = 0
     num_blocked_squares = 0
     _goal = board.goal
@@ -240,7 +227,7 @@ def compute_heuristic(_vehicles, board):
                 start_coord -= 1
     #if red car is vertical
     else:
-        #distance from head to goal
+    #distance from head to goal
         dist_head = abs(_goal.y - red_car_ptr.y)
         #tail position
         tail_ptr = red_car_ptr.y - red_car.len+1
